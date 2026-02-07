@@ -8,47 +8,46 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: macos-latest
     
     steps:
     - uses: actions/checkout@v3
     
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.10'
-    
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install pywin32
+        brew install git python3
     
     - name: Download and install Theos
       run: |
-        mkdir -p $env:GITHUB_WORKSPACE\theos
-        git clone --recursive https://github.com/theos/theos.git $env:GITHUB_WORKSPACE\theos
+        mkdir -p "$GITHUB_WORKSPACE/theos"
+        git clone --recursive https://github.com/theos/theos.git "$GITHUB_WORKSPACE/theos"
     
     - name: Set THEOS environment variable
       run: |
-        echo "THEOS=$env:GITHUB_WORKSPACE\theos" >> $env:GITHUB_ENV
-        echo "THEOS_PACKAGE_SCHEME=rootless" >> $env:GITHUB_ENV
+        echo "THEOS=$GITHUB_WORKSPACE/theos" >> "$GITHUB_ENV"
+        # Ensure Theos is properly configured
+        echo "Theos path: $GITHUB_WORKSPACE/theos"
+        if [ -d "$GITHUB_WORKSPACE/theos/makefiles/package" ]; then
+            ls -la "$GITHUB_WORKSPACE/theos/makefiles/package"
+        else
+            echo "Package directory not found"
+        fi
     
     - name: Download iOS SDK
       run: |
-        if (-not (Test-Path "$env:GITHUB_WORKSPACE\theos\sdks")) {
-            New-Item -ItemType Directory -Path "$env:GITHUB_WORKSPACE\theos\sdks" -Force | Out-Null
-        }
-        # Use a different approach to get iOS SDK
-        # For now, we'll skip SDK download as Theos should handle it
-        Write-Host "Skipping iOS SDK download for now"
-        # Create a placeholder to avoid build errors
-        New-Item -ItemType Directory -Path "$env:GITHUB_WORKSPACE\theos\sdks\iPhoneOS.sdk" -Force | Out-Null
+        if [ ! -d "$GITHUB_WORKSPACE/theos/sdks" ]; then
+            mkdir -p "$GITHUB_WORKSPACE/theos/sdks"
+        fi
+        # Use theos/sdks repository to get iOS SDK
+        git clone https://github.com/theos/sdks.git "$GITHUB_WORKSPACE/sdks-temp"
+        cp -r "$GITHUB_WORKSPACE/sdks-temp/"* "$GITHUB_WORKSPACE/theos/sdks/"
+        rm -rf "$GITHUB_WORKSPACE/sdks-temp"
     
     - name: Build 2DFaceX
       run: |
         cd 2DFaceX
-        $env:PATH += ";$env:GITHUB_WORKSPACE\theos\bin"
-        make package THEOS_DEVICE_IP=127.0.0.1 THEOS_PACKAGE_SCHEME=rootless
+        export PATH="$PATH:$GITHUB_WORKSPACE/theos/bin"
+        make package THEOS_DEVICE_IP=127.0.0.1
     
     - name: Upload build artifact
       uses: actions/upload-artifact@v4
