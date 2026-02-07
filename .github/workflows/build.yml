@@ -109,6 +109,12 @@ jobs:
                 ls -la .theos/packages/*.deb 2>/dev/null || echo "No deb files found in .theos/packages directory"
             fi
         fi
+        # Check in theos directory
+        if [ -d "$GITHUB_WORKSPACE/theos/packages" ]; then
+            echo "Checking in theos/packages directory..."
+            ls -la "$GITHUB_WORKSPACE/theos/packages"
+            ls -la "$GITHUB_WORKSPACE/theos/packages"/*.deb 2>/dev/null || echo "No deb files found in theos/packages directory"
+        fi
     
     - name: Upload build artifact
       uses: actions/upload-artifact@v4
