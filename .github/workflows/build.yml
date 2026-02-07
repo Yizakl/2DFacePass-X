@@ -26,9 +26,7 @@ jobs:
     - name: Download and install Theos
       run: |
         mkdir -p $env:GITHUB_WORKSPACE\theos
-        Invoke-WebRequest -Uri "https://github.com/theos/theos/releases/latest/download/theos.zip" -OutFile "theos.zip"
-        Expand-Archive -Path "theos.zip" -DestinationPath "$env:GITHUB_WORKSPACE\theos"
-        Remove-Item "theos.zip"
+        git clone --recursive https://github.com/theos/theos.git $env:GITHUB_WORKSPACE\theos
     
     - name: Set THEOS environment variable
       run: |
