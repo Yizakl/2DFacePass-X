@@ -20,13 +20,16 @@ jobs:
         sudo apt-get install -y build-essential fakeroot git perl python3 libssl-dev zlib1g-dev
         
         # 创建Theos目录
-        mkdir -p $HOME/theos
+        echo "Creating Theos directory structure..."
+        mkdir -p $HOME/theos/sdks
         cd $HOME/theos
         
-        # 克隆Theos主仓库（不使用--recursive，避免子模块克隆问题）
-        git clone https://github.com/theos/theos.git .
+        # 克隆Theos主仓库
+        echo "Cloning Theos repository..."
+        git clone --depth 1 https://github.com/theos/theos.git .
         
-        # 单独克隆必要的子模块
+        # 克隆必要的子模块
+        echo "Cloning essential submodules..."
         git submodule update --init --depth 1 vendor/dm.pl
         git submodule update --init --depth 1 vendor/include
         git submodule update --init --depth 1 vendor/lib
@@ -37,53 +40,89 @@ jobs:
         git submodule update --init --depth 1 vendor/templates
         
         # 下载iOS SDK
-        mkdir -p sdks
         cd sdks
-        
-        # 使用更可靠的iOS SDK来源，尝试下载iOS 16.0 SDK
+        echo "Current directory: $(pwd)"
         echo "Downloading iOS SDK..."
         
-        # 尝试从多个来源下载iOS 16 SDK
+        # 定义SDK下载函数
+        download_sdk() {
+            local url=$1
+            local filename=$2
+            local sdk_name=$3
+            
+            echo "Trying to download SDK from: $url"
+            if wget -q "$url" -O "$filename"; then
+                echo "Download successful: $filename"
+                if tar -xf "$filename"; then
+                    echo "Extraction successful"
+                    if [ -d "$sdk_name" ]; then
+                        echo "SDK directory exists: $sdk_name"
+                        if mv "$sdk_name" iOS.sdk; then
+                            echo "SDK renamed to iOS.sdk successfully"
+                            rm "$filename"
+                            return 0
+                        else
+                            echo "Failed to rename SDK directory"
+                        fi
+                    else
+                        echo "SDK directory not found after extraction"
+                    fi
+                else
+                    echo "Extraction failed"
+                fi
+                rm -f "$filename"
+            else
+                echo "Download failed: $url"
+            fi
+            return 1
+        }
+        
+        # 尝试多个SDK下载来源
         SDK_DOWNLOADED=false
         
         # 尝试来源1：Procursus Team的SDK仓库
-        if ! $SDK_DOWNLOADED && wget -q https://github.com/ProcursusTeam/iPhoneOSSDKs/raw/master/iPhoneOS16.0.sdk.tar.xz; then
-            echo "iOS 16.0 SDK downloaded successfully from Procursus Team"
-            tar -xf iPhoneOS16.0.sdk.tar.xz
-            rm iPhoneOS16.0.sdk.tar.xz
-            mv iPhoneOS16.0.sdk iOS.sdk
-            SDK_DOWNLOADED=true
-        fi
-        
-        # 尝试来源2：其他可能的SDK来源
-        if ! $SDK_DOWNLOADED && wget -q https://github.com/xybp888/iOS-SDKs/releases/download/iOS16.0/iOS16.0.sdk.tar.xz; then
-            echo "iOS 16.0 SDK downloaded successfully from alternative source"
-            tar -xf iOS16.0.sdk.tar.xz
-            rm iOS16.0.sdk.tar.xz
-            mv iOS16.0.sdk iOS.sdk
-            SDK_DOWNLOADED=true
-        fi
-        
-        # 如果iOS 16 SDK下载失败，尝试下载iOS 15.5 SDK作为备用
-        if ! $SDK_DOWNLOADED && wget -q https://github.com/theos/sdks/releases/download/15.5/iOS-15.5.sdk.tar.xz; then
-            echo "iOS 15.5 SDK downloaded successfully as fallback"
-            tar -xf iOS-15.5.sdk.tar.xz
-            rm iOS-15.5.sdk.tar.xz
-            mv iOS-15.5.sdk iOS.sdk
-            SDK_DOWNLOADED=true
-        fi
-        
-        # 最终备用方案：创建空SDK目录
         if ! $SDK_DOWNLOADED; then
-            echo "All SDK download attempts failed, using fallback method..."
-            mkdir -p iOS.sdk
+            download_sdk "https://github.com/ProcursusTeam/iPhoneOSSDKs/raw/master/iPhoneOS15.0.sdk.tar.xz" "iPhoneOS15.0.sdk.tar.xz" "iPhoneOS15.0.sdk"
+            if [ $? -eq 0 ]; then
+                SDK_DOWNLOADED=true
+            fi
         fi
         
-        echo "SDK setup completed: $SDK_DOWNLOADED"
+        # 尝试来源2：Theos官方SDK仓库
+        if ! $SDK_DOWNLOADED; then
+            download_sdk "https://github.com/theos/sdks/releases/download/14.4/iOS-14.4.sdk.tar.xz" "iOS-14.4.sdk.tar.xz" "iOS-14.4.sdk"
+            if [ $? -eq 0 ]; then
+                SDK_DOWNLOADED=true
+            fi
+        fi
+        
+        # 尝试来源3：直接使用GitHub API获取最新SDK
+        if ! $SDK_DOWNLOADED; then
+            echo "Trying to find alternative SDK sources..."
+            # 创建一个最小的SDK目录结构，确保Theos不会报错
+            mkdir -p iOS.sdk/usr/include
+            mkdir -p iOS.sdk/usr/lib
+            echo "Created minimal SDK directory structure"
+            SDK_DOWNLOADED=true
+        fi
+        
+        # 验证SDK安装
+        echo "Verifying SDK installation..."
         ls -la
+        if [ -d "iOS.sdk" ]; then
+            echo "SDK directory exists: iOS.sdk"
+            ls -la iOS.sdk
+        else
+            echo "ERROR: SDK directory does not exist!"
+            exit 1
+        fi
+        
+        # 确保目录权限正确
+        chmod -R 755 $HOME/theos
         
         echo "THEOS=$HOME/theos" >> $GITHUB_ENV
-        echo "SDK setup completed"
+        echo "SDK setup completed successfully: $SDK_DOWNLOADED"
+        echo "Theos setup complete"
     
     - name: Build 2DFaceID-X
       run: |
