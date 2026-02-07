@@ -21,6 +21,8 @@ jobs:
         
         # 创建Theos目录
         echo "Creating Theos directory structure..."
+        # 清理已存在的Theos目录，确保它是空的
+        rm -rf $HOME/theos
         mkdir -p $HOME/theos/sdks
         cd $HOME/theos
         
