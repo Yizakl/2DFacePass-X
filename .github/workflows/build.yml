@@ -61,12 +61,30 @@ jobs:
     
     - name: Build 2DFaceX
       run: |
+        # Check current directory and list files
+        pwd
+        ls -la
+        # Navigate to 2DFaceX directory
         cd 2DFaceX
+        pwd
+        ls -la
+        # Check Theos installation
+        echo "Theos path: $GITHUB_WORKSPACE/theos"
+        ls -la "$GITHUB_WORKSPACE/theos"
+        # Add Theos to PATH
         export PATH="$PATH:$GITHUB_WORKSPACE/theos/bin"
-        # Set deployment target to avoid arm64e warnings
+        # Set deployment target
         export IPHONEOS_DEPLOYMENT_TARGET=15.0
-        # Build with verbose output to see details
+        # Check available make command
+        which make
+        make --version
+        # Build with verbose output
+        echo "Starting build..."
         make package THEOS_DEVICE_IP=127.0.0.1 -v
+        # Check if deb file was created
+        echo "Build completed. Checking for deb files..."
+        ls -la
+        ls -la *.deb 2>/dev/null || echo "No deb files found"
     
     - name: Upload build artifact
       uses: actions/upload-artifact@v4
