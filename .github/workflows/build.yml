@@ -75,16 +75,40 @@ jobs:
         export PATH="$PATH:$GITHUB_WORKSPACE/theos/bin"
         # Set deployment target
         export IPHONEOS_DEPLOYMENT_TARGET=15.0
+        # Set THEOS environment variable explicitly
+        export THEOS="$GITHUB_WORKSPACE/theos"
         # Check available make command
         which make
         make --version
+        # Check Makefile content
+        echo "Makefile content:"
+        cat Makefile
         # Build with verbose output
         echo "Starting build..."
-        make package THEOS_DEVICE_IP=127.0.0.1 -v
+        # Clean previous builds
+        make clean -v
+        # Build package
+        make package -v
         # Check if deb file was created
         echo "Build completed. Checking for deb files..."
         ls -la
-        ls -la *.deb 2>/dev/null || echo "No deb files found"
+        ls -la *.deb 2>/dev/null || echo "No deb files found in current directory"
+        # Check in packages directory
+        if [ -d "packages" ]; then
+            echo "Checking in packages directory..."
+            ls -la packages
+            ls -la packages/*.deb 2>/dev/null || echo "No deb files found in packages directory"
+        fi
+        # Check in .theos directory
+        if [ -d ".theos" ]; then
+            echo "Checking in .theos directory..."
+            ls -la .theos
+            if [ -d ".theos/packages" ]; then
+                echo "Checking in .theos/packages directory..."
+                ls -la .theos/packages
+                ls -la .theos/packages/*.deb 2>/dev/null || echo "No deb files found in .theos/packages directory"
+            fi
+        fi
     
     - name: Upload build artifact
       uses: actions/upload-artifact@v4
