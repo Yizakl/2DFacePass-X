@@ -4,7 +4,7 @@
 
 @interface FaceRecognizer ()
 @property (nonatomic, strong) FaceDatabase *faceDatabase;
-@property (nonatomic, strong) VNDetectFaceLandmarksRequest *faceDetectionRequest;
+@property (nonatomic, strong) VNDetectFaceLandmarksRequest *faceDetectionRequest API_AVAILABLE(ios(11.0));
 @end
 
 @implementation FaceRecognizer
@@ -18,31 +18,36 @@
 }
 
 - (void)setupFaceDetection {
-    _faceDetectionRequest = [[VNDetectFaceLandmarksRequest alloc] init];
+    if (@available(iOS 11.0, *)) {
+        _faceDetectionRequest = [[VNDetectFaceLandmarksRequest alloc] init];
+    }
 }
 
 - (BOOL)recognizeFace:(UIImage *)faceImage {
-    VNImageRequestHandler *requestHandler = [[VNImageRequestHandler alloc] initWithCGImage:faceImage.CGImage options:@{}];
-    
-    NSError *error = nil;
-    [requestHandler performRequests:@[_faceDetectionRequest] error:&error];
-    
-    if (error) {
-        NSLog(@"Face detection error: %@", error);
-        return NO;
+    if (@available(iOS 11.0, *)) {
+        VNImageRequestHandler *requestHandler = [[VNImageRequestHandler alloc] initWithCGImage:faceImage.CGImage options:@{}];
+        
+        NSError *error = nil;
+        [requestHandler performRequests:@[_faceDetectionRequest] error:&error];
+        
+        if (error) {
+            NSLog(@"Face detection error: %@", error);
+            return NO;
+        }
+        
+        NSArray *faceObservations = _faceDetectionRequest.results;
+        if (faceObservations.count == 0) {
+            NSLog(@"No face detected");
+            return NO;
+        }
+        
+        VNFaceObservation *faceObservation = faceObservations.firstObject;
+        return [self processFaceObservation:faceObservation fromImage:faceImage];
     }
-    
-    NSArray *faceObservations = _faceDetectionRequest.results;
-    if (faceObservations.count == 0) {
-        NSLog(@"No face detected");
-        return NO;
-    }
-    
-    VNFaceObservation *faceObservation = faceObservations.firstObject;
-    return [self processFaceObservation:faceObservation fromImage:faceImage];
+    return NO;
 }
 
-- (BOOL)processFaceObservation:(VNFaceObservation *)faceObservation fromImage:(UIImage *)image {
+- (BOOL)processFaceObservation:(VNFaceObservation *)faceObservation fromImage:(UIImage *)image API_AVAILABLE(ios(11.0)) {
     CGRect faceBounds = faceObservation.boundingBox;
     CGSize imageSize = image.size;
     CGRect faceRect = CGRectMake(
