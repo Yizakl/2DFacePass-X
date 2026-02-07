@@ -15,7 +15,11 @@ jobs:
     
     - name: Install dependencies
       run: |
-        brew install git python3
+        brew install git python3 make
+        # Add GNU make to PATH
+        echo "PATH=$(brew --prefix make)/libexec/gnubin:$PATH" >> "$GITHUB_ENV"
+        # Verify make version
+        make --version
     
     - name: Download and install Theos
       run: |
@@ -59,7 +63,10 @@ jobs:
       run: |
         cd 2DFaceX
         export PATH="$PATH:$GITHUB_WORKSPACE/theos/bin"
-        make package THEOS_DEVICE_IP=127.0.0.1
+        # Set deployment target to avoid arm64e warnings
+        export IPHONEOS_DEPLOYMENT_TARGET=15.0
+        # Build with verbose output to see details
+        make package THEOS_DEVICE_IP=127.0.0.1 -v
     
     - name: Upload build artifact
       uses: actions/upload-artifact@v4
