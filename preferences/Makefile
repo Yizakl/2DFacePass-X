@@ -1,5 +1,5 @@
 ARCHS = arm64 arm64e
-# 使用iOS 15.5 SDK构建，但支持iOS 14.0及以上版本，包括iOS 16.4.1
+# 使用iOS 16.0 SDK构建，支持iOS 14.0及以上版本，包括iOS 16.4.1
 TARGET = iphone:clang:latest:14.0
 
 include $(THEOS)/makefiles/common.mk

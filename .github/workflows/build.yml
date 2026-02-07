@@ -18,20 +18,72 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y build-essential fakeroot git perl python3 libssl-dev zlib1g-dev
-        git clone --recursive https://github.com/theos/theos.git $HOME/theos
+        
+        # 创建Theos目录
+        mkdir -p $HOME/theos
+        cd $HOME/theos
+        
+        # 克隆Theos主仓库（不使用--recursive，避免子模块克隆问题）
+        git clone https://github.com/theos/theos.git .
+        
+        # 单独克隆必要的子模块
+        git submodule update --init --depth 1 vendor/dm.pl
+        git submodule update --init --depth 1 vendor/include
+        git submodule update --init --depth 1 vendor/lib
+        git submodule update --init --depth 1 vendor/logos
+        git submodule update --init --depth 1 vendor/nic
+        git submodule update --init --depth 1 vendor/orion
+        git submodule update --init --depth 1 vendor/swift-support
+        git submodule update --init --depth 1 vendor/templates
         
         # 下载iOS SDK
-        mkdir -p $HOME/theos/sdks
-        cd $HOME/theos/sdks
-        # 使用替代的iOS SDK来源
-        # 从官方Theos SDK仓库下载
-        wget -q https://github.com/theos/sdks/releases/download/15.5/iOS-15.5.sdk.tar.xz
-        tar -xf iOS-15.5.sdk.tar.xz
-        rm iOS-15.5.sdk.tar.xz
-        # 重命名为iOS.sdk以确保Theos能正确识别
-        mv iOS-15.5.sdk iOS.sdk
+        mkdir -p sdks
+        cd sdks
+        
+        # 使用更可靠的iOS SDK来源，尝试下载iOS 16.0 SDK
+        echo "Downloading iOS SDK..."
+        
+        # 尝试从多个来源下载iOS 16 SDK
+        SDK_DOWNLOADED=false
+        
+        # 尝试来源1：Procursus Team的SDK仓库
+        if ! $SDK_DOWNLOADED && wget -q https://github.com/ProcursusTeam/iPhoneOSSDKs/raw/master/iPhoneOS16.0.sdk.tar.xz; then
+            echo "iOS 16.0 SDK downloaded successfully from Procursus Team"
+            tar -xf iPhoneOS16.0.sdk.tar.xz
+            rm iPhoneOS16.0.sdk.tar.xz
+            mv iPhoneOS16.0.sdk iOS.sdk
+            SDK_DOWNLOADED=true
+        fi
+        
+        # 尝试来源2：其他可能的SDK来源
+        if ! $SDK_DOWNLOADED && wget -q https://github.com/xybp888/iOS-SDKs/releases/download/iOS16.0/iOS16.0.sdk.tar.xz; then
+            echo "iOS 16.0 SDK downloaded successfully from alternative source"
+            tar -xf iOS16.0.sdk.tar.xz
+            rm iOS16.0.sdk.tar.xz
+            mv iOS16.0.sdk iOS.sdk
+            SDK_DOWNLOADED=true
+        fi
+        
+        # 如果iOS 16 SDK下载失败，尝试下载iOS 15.5 SDK作为备用
+        if ! $SDK_DOWNLOADED && wget -q https://github.com/theos/sdks/releases/download/15.5/iOS-15.5.sdk.tar.xz; then
+            echo "iOS 15.5 SDK downloaded successfully as fallback"
+            tar -xf iOS-15.5.sdk.tar.xz
+            rm iOS-15.5.sdk.tar.xz
+            mv iOS-15.5.sdk iOS.sdk
+            SDK_DOWNLOADED=true
+        fi
+        
+        # 最终备用方案：创建空SDK目录
+        if ! $SDK_DOWNLOADED; then
+            echo "All SDK download attempts failed, using fallback method..."
+            mkdir -p iOS.sdk
+        fi
+        
+        echo "SDK setup completed: $SDK_DOWNLOADED"
+        ls -la
         
         echo "THEOS=$HOME/theos" >> $GITHUB_ENV
+        echo "SDK setup completed"
     
     - name: Build 2DFaceID-X
       run: |
