@@ -1,12 +1,15 @@
 include $(THEOS)/makefiles/common.mk
 
+# Set target iOS version
+TARGET = iphone:16.5:15.0
+
 TWEAK_NAME = 2DFaceX
 
 2DFaceX_FILES = Tweak/Tweak.xm Tweak/FaceRecognizer.m Tweak/FaceDatabase.m
 2DFaceX_FRAMEWORKS = UIKit AVFoundation CoreMedia CoreVideo CoreImage Vision
 2DFaceX_PRIVATE_FRAMEWORKS = SpringBoardServices
-2DFaceX_CFLAGS = -fobjc-arc -Wno-deprecated-declarations -mios-version-min=15.0
-2DFaceX_LDFLAGS = -lobjc -mios-version-min=15.0
+2DFaceX_CFLAGS = -fobjc-arc -Wno-deprecated-declarations
+2DFaceX_LDFLAGS = -lobjc
 2DFaceX_ARCHS = arm64
 
 # Rootless support
@@ -17,7 +20,7 @@ else
 endif
 
 # Ensure compatibility with roothide
-THEOS_PACKAGE_SCHEME ?= rootless
+# Let Theos handle the package scheme automatically
 
 include $(THEOS_MAKE_PATH)/tweak.mk
 
