@@ -106,13 +106,10 @@
     
     for (AVCaptureDeviceFormat *format in device.formats) {
         CMFormatDescriptionRef formatDescription = format.formatDescription;
-        CFArrayRef videoDimensions = CMVideoFormatDescriptionGetDimensionsArray(formatDescription);
+        CMVideoDimensions dimensions = CMVideoFormatDescriptionGetDimensions(formatDescription);
         
-        if (videoDimensions && CFArrayGetCount(videoDimensions) > 0) {
-            CMVideoDimensions dimensions = *(const CMVideoDimensions *)CFArrayGetValueAtIndex(videoDimensions, 0);
-            
-            // 计算评分：优先选择中等分辨率，平衡性能和质量
-            CGFloat resolutionScore = 1.0 / (1.0 + fabs(dimensions.width * dimensions.height - 640 * 480) / (640 * 480));
+        // 计算评分：优先选择中等分辨率，平衡性能和质量
+        CGFloat resolutionScore = 1.0 / (1.0 + abs((int)(dimensions.width * dimensions.height - 640 * 480)) / (640.0 * 480.0));
             
             // 检查是否支持该格式的帧率
             NSArray *frameRates = format.videoSupportedFrameRateRanges;
