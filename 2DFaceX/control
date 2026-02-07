@@ -1,0 +1,10 @@
+Package: com.yourname.2dfacex
+Name: 2DFaceX
+Depends: mobilesubstrate, preferenceloader
+Version: 1.0.0
+Architecture: iphoneos-arm64
+Description: 2D facial recognition tweak for iOS 15.0+
+Maintainer: Your Name
+Author: Your Name
+Section: Tweaks
+Compatible: ios (>= 15.0, <= 16.5.1)
