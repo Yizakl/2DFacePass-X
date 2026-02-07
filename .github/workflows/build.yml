@@ -23,12 +23,13 @@ jobs:
         # 下载iOS SDK
         mkdir -p $HOME/theos/sdks
         cd $HOME/theos/sdks
-        # 下载iOS 16.4.1 SDK
-        wget -q https://github.com/xybp888/iOS-SDKs/raw/master/iOS16.4.sdk.tar.xz
-        tar -xf iOS16.4.sdk.tar.xz
-        rm iOS16.4.sdk.tar.xz
+        # 使用替代的iOS SDK来源
+        # 从官方Theos SDK仓库下载
+        wget -q https://github.com/theos/sdks/releases/download/15.5/iOS-15.5.sdk.tar.xz
+        tar -xf iOS-15.5.sdk.tar.xz
+        rm iOS-15.5.sdk.tar.xz
         # 重命名为iOS.sdk以确保Theos能正确识别
-        mv iOS16.4.sdk iOS.sdk
+        mv iOS-15.5.sdk iOS.sdk
         
         echo "THEOS=$HOME/theos" >> $GITHUB_ENV
     

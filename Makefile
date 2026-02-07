@@ -1,5 +1,6 @@
 ARCHS = arm64 arm64e
-TARGET = iphone:clang:latest:16.4
+# 使用iOS 15.5 SDK构建，但支持iOS 14.0及以上版本，包括iOS 16.4.1
+TARGET = iphone:clang:latest:14.0
 INSTALL_TARGET_PROCESSES = SpringBoard
 
 include $(THEOS)/makefiles/common.mk
