@@ -1,0 +1,34 @@
+name: Build 2DFaceID-X
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Theos
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential fakeroot git perl python3 libssl-dev zlib1g-dev
+        git clone --recursive https://github.com/theos/theos.git $HOME/theos
+        echo "THEOS=$HOME/theos" >> $GITHUB_ENV
+    
+    - name: Build 2DFaceID-X
+      run: |
+        export THEOS=$HOME/theos
+        cd $GITHUB_WORKSPACE
+        make package FINALPACKAGE=1
+    
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: 2DFaceID-X
+        path: "*.deb"
