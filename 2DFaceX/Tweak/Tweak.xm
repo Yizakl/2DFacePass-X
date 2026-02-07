@@ -10,7 +10,7 @@
 - (void)performUnlockAnimationForUIUnlockFromSource:(int)source;
 @end
 
-@interface SBLockScreenViewController (FaceRecognition)
+@interface SBLockScreenViewController (FaceRecognition) <AVCaptureVideoDataOutputSampleBufferDelegate>
 - (void)setupFaceRecognition;
 - (void)setupCamera;
 - (void)captureOutput:(AVCaptureOutput *)output didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer fromConnection:(AVCaptureConnection *)connection;

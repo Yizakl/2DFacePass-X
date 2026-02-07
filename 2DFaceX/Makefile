@@ -1,5 +1,8 @@
 include $(THEOS)/makefiles/common.mk
 
+# Enable parallel build
+THEOS_MAKE_PARALLEL = YES
+
 # Set target iOS version
 TARGET = iphone:16.5:15.0
 
@@ -10,6 +13,7 @@ TWEAK_NAME = 2DFaceX
 2DFaceX_PRIVATE_FRAMEWORKS = SpringBoardServices
 2DFaceX_CFLAGS = -fobjc-arc -Wno-deprecated-declarations
 2DFaceX_LDFLAGS = -lobjc
+# Only use arm64 architecture to avoid arm64e warning
 2DFaceX_ARCHS = arm64
 
 # Rootless support
