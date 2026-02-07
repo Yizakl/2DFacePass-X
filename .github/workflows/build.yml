@@ -15,81 +15,15 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
     
-    - name: Set up build environment
+    - name: Build with Docker
       run: |
-        echo "Setting up build environment..."
-        sudo apt-get update
-        sudo apt-get install -y build-essential fakeroot git perl python3 libssl-dev zlib1g-dev
-        echo "Build environment setup complete"
-    
-    - name: Set up Theos
-      run: |
-        echo "Setting up Theos..."
+        echo "Building 2DFaceID-X with Docker..."
         
-        # 清理并创建Theos目录
-        rm -rf $HOME/theos
-        mkdir -p $HOME/theos
-        cd $HOME/theos
-        
-        # 克隆Theos仓库
-        echo "Cloning Theos repository..."
-        git clone --depth 1 https://github.com/theos/theos.git .
-        
-        # 克隆必要的子模块
-        echo "Cloning essential submodules..."
-        git submodule update --init --depth 1 vendor/dm.pl
-        git submodule update --init --depth 1 vendor/include
-        git submodule update --init --depth 1 vendor/lib
-        git submodule update --init --depth 1 vendor/logos
-        git submodule update --init --depth 1 vendor/nic
-        git submodule update --init --depth 1 vendor/orion
-        git submodule update --init --depth 1 vendor/swift-support
-        git submodule update --init --depth 1 vendor/templates
-        
-        echo "Theos setup complete"
-    
-    - name: Create minimal SDK structure
-      run: |
-        echo "Creating minimal SDK structure..."
-        
-        # 创建SDK目录
-        mkdir -p $HOME/theos/sdks/iOS.sdk
-        cd $HOME/theos/sdks/iOS.sdk
-        
-        # 创建必要的目录结构
-        mkdir -p usr/include
-        mkdir -p usr/lib
-        mkdir -p System/Library/Frameworks
-        
-        # 创建SDK版本文件
-        echo "14.4" > SDKVersion
-        
-        # 创建一个简单的头文件，避免编译错误
-        echo "#ifndef UIKIT_H"
-        echo "#define UIKIT_H"
-        echo "#endif" > usr/include/UIKit.h
-        
-        echo "Minimal SDK structure created"
-    
-    - name: Build 2DFaceID-X
-      run: |
-        echo "Building 2DFaceID-X..."
-        export THEOS=$HOME/theos
-        cd $GITHUB_WORKSPACE
-        
-        # 显示构建环境信息
-        echo "Build environment:"
-        echo "THEOS: $THEOS"
-        echo "Current directory: $(pwd)"
-        
-        # 尝试构建
-        if make package FINALPACKAGE=1; then
-          echo "Build successful!"
-        else
-          echo "Build failed, trying with more verbose output..."
-          make package FINALPACKAGE=1 V=1
-          exit 1
-        fi
+        # 使用包含Theos和SDK的Docker镜像
+        docker run --rm -v $(pwd):/app -w /app ghcr.io/coolstar/theos:latest bash -c "
+          echo 'Building 2DFaceID-X...'
+          make package FINALPACKAGE=1
+        "
     
     - name: Verify build output
       run: |
