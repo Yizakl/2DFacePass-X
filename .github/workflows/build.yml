@@ -19,6 +19,17 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y build-essential fakeroot git perl python3 libssl-dev zlib1g-dev
         git clone --recursive https://github.com/theos/theos.git $HOME/theos
+        
+        # 下载iOS SDK
+        mkdir -p $HOME/theos/sdks
+        cd $HOME/theos/sdks
+        # 下载iOS 16.4.1 SDK
+        wget -q https://github.com/xybp888/iOS-SDKs/raw/master/iOS16.4.sdk.tar.xz
+        tar -xf iOS16.4.sdk.tar.xz
+        rm iOS16.4.sdk.tar.xz
+        # 重命名为iOS.sdk以确保Theos能正确识别
+        mv iOS16.4.sdk iOS.sdk
+        
         echo "THEOS=$HOME/theos" >> $GITHUB_ENV
     
     - name: Build 2DFaceID-X
