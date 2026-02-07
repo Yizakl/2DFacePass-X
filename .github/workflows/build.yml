@@ -11,7 +11,7 @@ jobs:
     runs-on: macos-latest
     
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     
     - name: Install dependencies
       run: |
@@ -38,10 +38,22 @@ jobs:
         if [ ! -d "$GITHUB_WORKSPACE/theos/sdks" ]; then
             mkdir -p "$GITHUB_WORKSPACE/theos/sdks"
         fi
-        # Use theos/sdks repository to get iOS SDK
-        git clone https://github.com/theos/sdks.git "$GITHUB_WORKSPACE/sdks-temp"
-        cp -r "$GITHUB_WORKSPACE/sdks-temp/"* "$GITHUB_WORKSPACE/theos/sdks/"
-        rm -rf "$GITHUB_WORKSPACE/sdks-temp"
+        # Clone the entire theos/sdks repository
+        git clone https://github.com/theos/sdks.git "$GITHUB_WORKSPACE/sdks-repo"
+        # Copy all SDKs to theos/sdks directory
+        cp -r "$GITHUB_WORKSPACE/sdks-repo/"* "$GITHUB_WORKSPACE/theos/sdks/" 2>/dev/null || true
+        # Clean up
+        rm -rf "$GITHUB_WORKSPACE/sdks-repo"
+        # Create a symlink for compatibility
+        if [ -d "$GITHUB_WORKSPACE/theos/sdks/iPhoneOS16.5.sdk" ]; then
+            ln -sf "iPhoneOS16.5.sdk" "$GITHUB_WORKSPACE/theos/sdks/iPhoneOS.sdk"
+        elif [ -d "$GITHUB_WORKSPACE/theos/sdks/iPhoneOS16.4.sdk" ]; then
+            ln -sf "iPhoneOS16.4.sdk" "$GITHUB_WORKSPACE/theos/sdks/iPhoneOS.sdk"
+        elif [ -d "$GITHUB_WORKSPACE/theos/sdks/iPhoneOS16.3.sdk" ]; then
+            ln -sf "iPhoneOS16.3.sdk" "$GITHUB_WORKSPACE/theos/sdks/iPhoneOS.sdk"
+        fi
+        # List available SDKs
+        ls -la "$GITHUB_WORKSPACE/theos/sdks/"
     
     - name: Build 2DFaceX
       run: |
