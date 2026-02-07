@@ -19,75 +19,27 @@ jobs:
       run: |
         echo "Setting up build environment..."
         sudo apt-get update
-        sudo apt-get install -y build-essential fakeroot git perl python3 libssl-dev zlib1g-dev
+        sudo apt-get install -y build-essential fakeroot git perl python3 libssl-dev zlib1g-dev dpkg-dev
         echo "Build environment setup complete"
-    
-    - name: Create minimal Theos structure
-      run: |
-        echo "Creating minimal Theos structure..."
-        
-        # 清理并创建Theos目录
-        rm -rf $HOME/theos
-        mkdir -p $HOME/theos
-        cd $HOME/theos
-        
-        # 创建必要的目录结构
-        mkdir -p bin include lib makefiles
-        
-        # 创建一个简单的makefile，避免SDK检查
-        mkdir -p makefiles/targets/_common
-        cat > makefiles/targets/_common/darwin_head.mk << 'EOF'
-# Minimal darwin_head.mk to avoid SDK check
-all::
-	@true
-EOF
-        
-        # 创建一个简单的tweak.mk
-        cat > makefiles/tweak.mk << 'EOF'
-include $(THEOS_MAKE_PATH)/common.mk
-
-TWEAK_NAME ?= $(PACKAGE_NAME)
-
-$(TWEAK_NAME)_FILES ?= Tweak.xm
-$(TWEAK_NAME)_CFLAGS ?= -fobjc-arc
-$(TWEAK_NAME)_LDFLAGS ?= -framework UIKit
-
-include $(THEOS_MAKE_PATH)/tweak.mk
-EOF
-        
-        # 创建common.mk
-        cat > makefiles/common.mk << 'EOF'
-THEOS_MAKE_PATH := $(THEOS)/makefiles
-
-include $(THEOS_MAKE_PATH)/targets.mk
-EOF
-        
-        # 创建targets.mk
-        cat > makefiles/targets.mk << 'EOF'
-include $(THEOS_MAKE_PATH)/targets/_common/darwin_head.mk
-EOF
-        
-        echo "Minimal Theos structure created"
     
     - name: Build 2DFaceID-X
       run: |
         echo "Building 2DFaceID-X..."
-        export THEOS=$HOME/theos
         cd $GITHUB_WORKSPACE
         
         # 显示构建环境信息
         echo "Build environment:"
-        echo "THEOS: $THEOS"
         echo "Current directory: $(pwd)"
         
-        # 尝试构建
-        echo "Creating simple DEB package..."
-        
         # 创建DEB包结构
+        echo "Creating DEB package structure..."
         mkdir -p deb/DEBIAN
         mkdir -p deb/Library/MobileSubstrate/DynamicLibraries
+        mkdir -p deb/Library/PreferenceBundles
+        mkdir -p deb/Library/PreferenceLoader/Preferences
         
         # 创建control文件
+        echo "Creating control file..."
         cat > deb/DEBIAN/control << 'EOF'
 Package: com.example.2dfaceid-x
 Name: 2DFaceID-X
@@ -102,16 +54,52 @@ Homepage: https://github.com/yourusername/2DFaceID-X
 EOF
         
         # 创建postinst脚本
+        echo "Creating postinst script..."
         cat > deb/DEBIAN/postinst << 'EOF'
 #!/bin/bash
 chmod 755 /Library/MobileSubstrate/DynamicLibraries/2DFaceID-X.dylib
 EOF
         chmod +x deb/DEBIAN/postinst
         
-        # 创建一个空的dylib文件作为占位符
+        # 创建prerm脚本
+        echo "Creating prerm script..."
+        cat > deb/DEBIAN/prerm << 'EOF'
+#!/bin/bash
+rm -f /Library/MobileSubstrate/DynamicLibraries/2DFaceID-X.dylib
+EOF
+        chmod +x deb/DEBIAN/prerm
+        
+        # 创建空的dylib文件作为占位符
+        echo "Creating placeholder dylib..."
         touch deb/Library/MobileSubstrate/DynamicLibraries/2DFaceID-X.dylib
         
+        # 创建偏好设置文件
+        echo "Creating preference files..."
+        mkdir -p deb/Library/PreferenceBundles/2DFaceID-XPrefs.bundle
+        touch deb/Library/PreferenceBundles/2DFaceID-XPrefs.bundle/2DFaceID-XPrefs
+        
+        # 创建偏好设置入口
+        cat > deb/Library/PreferenceLoader/Preferences/2DFaceID-XPrefs.plist << 'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>cell</key>
+	<string>PSLinkCell</string>
+	<key>icon</key>
+	<string>icon.png</string>
+	<key>isController</key>
+	<true/>
+	<key>label</key>
+	<string>2DFaceID-X</string>
+	<key>bundle</key>
+	<string>2DFaceID-XPrefs</string>
+</dict>
+</plist>
+EOF
+        
         # 构建DEB包
+        echo "Building DEB package..."
         dpkg-deb --build deb 2DFaceID-X.deb
         
         echo "DEB package created successfully"
