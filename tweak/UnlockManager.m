@@ -18,6 +18,12 @@
     return self;
 }
 
+#pragma mark - FaceRecognitionDelegate
+
+- (void)faceRecognitionDidRecognizeFace:(BOOL)recognized withConfidence:(CGFloat)confidence {
+    [self handleFaceRecognitionResult:recognized withConfidence:confidence];
+}
+
 - (void)handleFaceRecognitionResult:(BOOL)recognized withConfidence:(CGFloat)confidence {
     dispatch_async(self.unlockQueue, ^{        if (self.isUnlocking) return;
         

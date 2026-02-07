@@ -1,10 +1,12 @@
 #import <Foundation/Foundation.h>
+#import <AVFoundation/AVFoundation.h>
+#import "CameraManager.h"
 
 @protocol FaceRecognitionDelegate <NSObject>
 - (void)faceRecognitionDidRecognizeFace:(BOOL)recognized withConfidence:(CGFloat)confidence;
 @end
 
-@interface FaceRecognition : NSObject
+@interface FaceRecognition : NSObject <CameraManagerDelegate>
 
 @property (nonatomic, weak) id<FaceRecognitionDelegate> delegate;
 
