@@ -10,6 +10,15 @@
 - (void)performUnlockAnimationForUIUnlockFromSource:(int)source;
 @end
 
+@interface SBLockScreenViewController (FaceRecognition)
+- (void)setupFaceRecognition;
+- (void)setupCamera;
+- (void)captureOutput:(AVCaptureOutput *)output didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer fromConnection:(AVCaptureConnection *)connection;
+- (UIImage *)imageFromPixelBuffer:(CVPixelBufferRef)pixelBuffer;
+- (void)startFaceRecognition;
+- (void)unlockDevice;
+@end
+
 static SBLockScreenViewController *_lockScreenViewController = nil;
 static SBLockScreenPasscodeViewController *_passcodeViewController = nil;
 static FaceRecognizer *_faceRecognizer = nil;
@@ -28,6 +37,8 @@ static void replacedViewDidAppear(id self, SEL _cmd, BOOL animated) {
         [self setupFaceRecognition];
     }
 }
+
+@implementation SBLockScreenViewController (FaceRecognition)
 
 - (void)setupFaceRecognition {
     dispatch_once(&_onceToken, ^{  
@@ -108,6 +119,8 @@ static void replacedViewDidAppear(id self, SEL _cmd, BOOL animated) {
         [_passcodeViewController performUnlockAnimationForUIUnlockFromSource:0];
     }
 }
+
+@end
 
 %hook SBLockScreenViewController
 
