@@ -1,0 +1,78 @@
+name: Manual Build 2DFaceID-X
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Plugin version'
+        required: true
+        default: '1.0.0'
+      target:
+        description: 'Target iOS version'
+        required: true
+        default: '16.4'
+
+jobs:
+  build:
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Theos
+      run: |
+        echo "Setting up Theos..."
+        # Install Theos
+        git clone --recursive https://github.com/theos/theos.git ~/theos
+        # Set environment variables
+        echo "THEOS=~/theos" >> $GITHUB_ENV
+        echo "PATH=$THEOS/bin:$PATH" >> $GITHUB_ENV
+        echo "Theos setup complete"
+    
+    - name: Install dependencies
+      run: |
+        echo "Installing dependencies..."
+        # Install Xcode command line tools if not installed
+        xcode-select --install || true
+        # Install additional dependencies
+        brew install fakeroot dpkg
+        echo "Dependencies installed"
+    
+    - name: Build 2DFaceID-X
+      run: |
+        echo "Building 2DFaceID-X..."
+        cd $GITHUB_WORKSPACE
+        
+        # Update version in Makefile if needed
+        sed -i '' "s/Version: .*/Version: ${{ github.event.inputs.version }}/g" control
+        
+        # Build the package
+        export THEOS=~/theos
+        export PATH=$THEOS/bin:$PATH
+        
+        echo "Building with Theos..."
+        if make package FINALPACKAGE=1; then
+          echo "Build successful!"
+        else
+          echo "Build failed, trying with verbose output..."
+          make package FINALPACKAGE=1 V=1
+          exit 1
+        fi
+    
+    - name: Verify build
+      run: |
+        echo "Verifying build..."
+        ls -la *.deb
+        if [ -f *.deb ]; then
+          echo "DEB package created successfully"
+        else
+          echo "ERROR: No DEB package created"
+          exit 1
+        fi
+    
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: 2DFaceID-X-${{ github.event.inputs.version }}
+        path: "*.deb"
