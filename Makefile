@@ -9,7 +9,7 @@ TWEAK_NAME = 2DFaceID-X
 
 2DFaceID-X_FILES = tweak/Tweak.xm tweak/FaceRecognition.m tweak/CameraManager.m tweak/UnlockManager.m
 2DFaceID-X_CFLAGS = -fobjc-arc -I$(THEOS)/include
-2DFaceID-X_LDFLAGS = -L$(THEOS)/lib -lopencv2 -framework AVFoundation -framework CoreImage -framework CoreMedia -framework UIKit
+2DFaceID-X_LDFLAGS = -L$(THEOS)/lib -framework AVFoundation -framework CoreImage -framework CoreMedia -framework UIKit
 
 # 支持rootless和roothide越狱环境
 ifeq ($(THEOS_PACKAGE_SCHEME),rootless)

@@ -110,31 +110,34 @@
         
         // 计算评分：优先选择中等分辨率，平衡性能和质量
         CGFloat resolutionScore = 1.0 / (1.0 + abs((int)(dimensions.width * dimensions.height - 640 * 480)) / (640.0 * 480.0));
+        
+        // 检查是否支持该格式的帧率
+        NSArray *frameRates = format.videoSupportedFrameRateRanges;
+        if (frameRates.count > 0) {
+            AVCaptureDeviceFormat *currentFormat = format;
+            CGFloat frameRateScore = 0.0;
             
-            // 检查是否支持该格式的帧率
-            NSArray *frameRates = format.videoSupportedFrameRateRanges;
-            if (frameRates.count > 0) {
-                AVCaptureDeviceFormat *currentFormat = format;
-                CGFloat frameRateScore = 0.0;
-                
-                for (AVFrameRateRange *range in frameRates) {
-                    if (range.maxFrameRate >= 15.0) {
-                        frameRateScore = 1.0;
-                        break;
-                    }
+            for (AVFrameRateRange *range in frameRates) {
+                if (range.maxFrameRate >= 15.0) {
+                    frameRateScore = 1.0;
+                    break;
                 }
-                
-                CGFloat totalScore = resolutionScore * 0.7 + frameRateScore * 0.3;
-                
-                if (totalScore > bestScore) {
-                    bestScore = totalScore;
-                    bestFormat = currentFormat;
-                }
+            }
+            
+            CGFloat totalScore = resolutionScore * 0.7 + frameRateScore * 0.3;
+            
+            if (totalScore > bestScore) {
+                bestScore = totalScore;
+                bestFormat = currentFormat;
             }
         }
     }
     
-    return bestFormat ?: device.activeFormat;
+    if (bestFormat) {
+        return bestFormat;
+    } else {
+        return device.activeFormat;
+    }
 }
 
 #pragma mark - AVCaptureVideoDataOutputSampleBufferDelegate
