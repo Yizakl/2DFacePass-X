@@ -16,70 +16,45 @@ jobs:
       uses: actions/checkout@v4
     
     - name: Set up build environment
-      run: |
-        echo "Setting up build environment..."
-        sudo apt-get update
-        sudo apt-get install -y build-essential fakeroot git perl python3 libssl-dev zlib1g-dev dpkg-dev
-        echo "Build environment setup complete"
+      run: sudo apt-get update && sudo apt-get install -y build-essential fakeroot git perl python3 libssl-dev zlib1g-dev dpkg-dev
     
-    - name: Build 2DFaceID-X
+    - name: Build DEB package
       run: |
-        echo "Building 2DFaceID-X..."
-        cd $GITHUB_WORKSPACE
-        
-        # 显示构建环境信息
-        echo "Build environment:"
-        echo "Current directory: $(pwd)"
-        
-        # 创建DEB包结构
-        echo "Creating DEB package structure..."
+        # Create DEB package structure
         mkdir -p deb/DEBIAN
         mkdir -p deb/Library/MobileSubstrate/DynamicLibraries
         mkdir -p deb/Library/PreferenceBundles
         mkdir -p deb/Library/PreferenceLoader/Preferences
         
-        # 创建control文件
-        echo "Creating control file..."
-        cat > deb/DEBIAN/control << 'EOF'
-Package: com.example.2dfaceid-x
-Name: 2DFaceID-X
-Version: 1.0.0
-Architecture: iphoneos-arm
-Description: Modern 2D face unlock tweak for iOS jailbroken devices
-Maintainer: Your Name <your.email@example.com>
-Depends: mobilesubstrate, preferenceloader
-Section: Tweaks
-Priority: optional
-Homepage: https://github.com/yourusername/2DFaceID-X
-EOF
+        # Create control file
+        echo 'Package: com.example.2dfaceid-x' > deb/DEBIAN/control
+        echo 'Name: 2DFaceID-X' >> deb/DEBIAN/control
+        echo 'Version: 1.0.0' >> deb/DEBIAN/control
+        echo 'Architecture: iphoneos-arm' >> deb/DEBIAN/control
+        echo 'Description: Modern 2D face unlock tweak for iOS jailbroken devices' >> deb/DEBIAN/control
+        echo 'Maintainer: Your Name <your.email@example.com>' >> deb/DEBIAN/control
+        echo 'Depends: mobilesubstrate, preferenceloader' >> deb/DEBIAN/control
+        echo 'Section: Tweaks' >> deb/DEBIAN/control
+        echo 'Priority: optional' >> deb/DEBIAN/control
+        echo 'Homepage: https://github.com/yourusername/2DFaceID-X' >> deb/DEBIAN/control
         
-        # 创建postinst脚本
-        echo "Creating postinst script..."
-        cat > deb/DEBIAN/postinst << 'EOF'
-#!/bin/bash
-chmod 755 /Library/MobileSubstrate/DynamicLibraries/2DFaceID-X.dylib
-EOF
+        # Create postinst script
+        echo '#!/bin/bash' > deb/DEBIAN/postinst
+        echo 'chmod 755 /Library/MobileSubstrate/DynamicLibraries/2DFaceID-X.dylib' >> deb/DEBIAN/postinst
         chmod +x deb/DEBIAN/postinst
         
-        # 创建prerm脚本
-        echo "Creating prerm script..."
-        cat > deb/DEBIAN/prerm << 'EOF'
-#!/bin/bash
-rm -f /Library/MobileSubstrate/DynamicLibraries/2DFaceID-X.dylib
-EOF
+        # Create prerm script
+        echo '#!/bin/bash' > deb/DEBIAN/prerm
+        echo 'rm -f /Library/MobileSubstrate/DynamicLibraries/2DFaceID-X.dylib' >> deb/DEBIAN/prerm
         chmod +x deb/DEBIAN/prerm
         
-        # 创建空的dylib文件作为占位符
-        echo "Creating placeholder dylib..."
+        # Create placeholder files
         touch deb/Library/MobileSubstrate/DynamicLibraries/2DFaceID-X.dylib
-        
-        # 创建偏好设置文件
-        echo "Creating preference files..."
         mkdir -p deb/Library/PreferenceBundles/2DFaceID-XPrefs.bundle
         touch deb/Library/PreferenceBundles/2DFaceID-XPrefs.bundle/2DFaceID-XPrefs
         
-        # 创建偏好设置入口
-        cat > deb/Library/PreferenceLoader/Preferences/2DFaceID-XPrefs.plist << 'EOF'
+        # Create preference loader entry
+        cat > deb/Library/PreferenceLoader/Preferences/2DFaceID-XPrefs.plist << 'END_OF_FILE'
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -96,24 +71,13 @@ EOF
 	<string>2DFaceID-XPrefs</string>
 </dict>
 </plist>
-EOF
+END_OF_FILE
         
-        # 构建DEB包
-        echo "Building DEB package..."
+        # Build DEB package
         dpkg-deb --build deb 2DFaceID-X.deb
-        
-        echo "DEB package created successfully"
     
-    - name: Verify build output
-      run: |
-        echo "Verifying build output..."
-        ls -la *.deb
-        if [ -f *.deb ]; then
-          echo "DEB package created successfully"
-        else
-          echo "ERROR: No DEB package created"
-          exit 1
-        fi
+    - name: Verify build
+      run: ls -la *.deb && if [ -f *.deb ]; then echo "Build successful"; else exit 1; fi
     
     - name: Upload artifact
       uses: actions/upload-artifact@v4
