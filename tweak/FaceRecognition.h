@@ -9,10 +9,11 @@
 @interface FaceRecognition : NSObject <CameraManagerDelegate>
 
 @property (nonatomic, weak) id<FaceRecognitionDelegate> delegate;
+@property (nonatomic, strong) NSMutableDictionary *registeredFaces;
 
 - (void)processSampleBuffer:(CMSampleBufferRef)sampleBuffer;
 - (void)registerFace:(UIImage *)faceImage withName:(NSString *)name;
 - (void)unregisterFaceWithName:(NSString *)name;
-- (NSArray *)registeredFaces;
+- (NSArray *)getRegisteredFaces;
 
 @end

@@ -1,11 +1,11 @@
 #import "FaceRecognition.h"
 #import <AVFoundation/AVFoundation.h>
 #import <CoreImage/CoreImage.h>
+#import <UIKit/UIKit.h>
 
 @interface FaceRecognition () <CameraManagerDelegate>
 
 @property (nonatomic, strong) CIDetector *faceDetector;
-@property (nonatomic, strong) NSMutableDictionary *registeredFaces;
 @property (nonatomic, strong) dispatch_queue_t processingQueue;
 
 @end
@@ -111,7 +111,7 @@
     NSLog(@"Face unregistered: %@", name);
 }
 
-- (NSArray *)registeredFaces {
+- (NSArray *)getRegisteredFaces {
     return [self.registeredFaces allKeys];
 }
 
