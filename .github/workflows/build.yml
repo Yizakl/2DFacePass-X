@@ -20,32 +20,38 @@ jobs:
     
     - name: Build DEB package
       run: |
-        # Create DEB package structure
+        # Create directories
         mkdir -p deb/DEBIAN
         mkdir -p deb/Library/MobileSubstrate/DynamicLibraries
         mkdir -p deb/Library/PreferenceBundles
         mkdir -p deb/Library/PreferenceLoader/Preferences
         
         # Create control file
-        echo 'Package: com.example.2dfaceid-x' > deb/DEBIAN/control
-        echo 'Name: 2DFaceID-X' >> deb/DEBIAN/control
-        echo 'Version: 1.0.0' >> deb/DEBIAN/control
-        echo 'Architecture: iphoneos-arm' >> deb/DEBIAN/control
-        echo 'Description: Modern 2D face unlock tweak for iOS jailbroken devices' >> deb/DEBIAN/control
-        echo 'Maintainer: Your Name <your.email@example.com>' >> deb/DEBIAN/control
-        echo 'Depends: mobilesubstrate, preferenceloader' >> deb/DEBIAN/control
-        echo 'Section: Tweaks' >> deb/DEBIAN/control
-        echo 'Priority: optional' >> deb/DEBIAN/control
-        echo 'Homepage: https://github.com/yourusername/2DFaceID-X' >> deb/DEBIAN/control
+        cat > deb/DEBIAN/control << 'EOL'
+Package: com.example.2dfaceid-x
+Name: 2DFaceID-X
+Version: 1.0.0
+Architecture: iphoneos-arm
+Description: Modern 2D face unlock tweak for iOS jailbroken devices
+Maintainer: Your Name <your.email@example.com>
+Depends: mobilesubstrate, preferenceloader
+Section: Tweaks
+Priority: optional
+Homepage: https://github.com/yourusername/2DFaceID-X
+EOL
         
-        # Create postinst script
-        echo '#!/bin/bash' > deb/DEBIAN/postinst
-        echo 'chmod 755 /Library/MobileSubstrate/DynamicLibraries/2DFaceID-X.dylib' >> deb/DEBIAN/postinst
+        # Create postinst
+        cat > deb/DEBIAN/postinst << 'EOL'
+#!/bin/bash
+chmod 755 /Library/MobileSubstrate/DynamicLibraries/2DFaceID-X.dylib
+EOL
         chmod +x deb/DEBIAN/postinst
         
-        # Create prerm script
-        echo '#!/bin/bash' > deb/DEBIAN/prerm
-        echo 'rm -f /Library/MobileSubstrate/DynamicLibraries/2DFaceID-X.dylib' >> deb/DEBIAN/prerm
+        # Create prerm
+        cat > deb/DEBIAN/prerm << 'EOL'
+#!/bin/bash
+rm -f /Library/MobileSubstrate/DynamicLibraries/2DFaceID-X.dylib
+EOL
         chmod +x deb/DEBIAN/prerm
         
         # Create placeholder files
@@ -53,8 +59,8 @@ jobs:
         mkdir -p deb/Library/PreferenceBundles/2DFaceID-XPrefs.bundle
         touch deb/Library/PreferenceBundles/2DFaceID-XPrefs.bundle/2DFaceID-XPrefs
         
-        # Create preference loader entry
-        cat > deb/Library/PreferenceLoader/Preferences/2DFaceID-XPrefs.plist << 'END_OF_FILE'
+        # Create preference entry
+        cat > deb/Library/PreferenceLoader/Preferences/2DFaceID-XPrefs.plist << 'EOL'
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -71,9 +77,9 @@ jobs:
 	<string>2DFaceID-XPrefs</string>
 </dict>
 </plist>
-END_OF_FILE
+EOL
         
-        # Build DEB package
+        # Build package
         dpkg-deb --build deb 2DFaceID-X.deb
     
     - name: Verify build
