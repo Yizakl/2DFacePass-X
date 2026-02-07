@@ -8,7 +8,7 @@ TWEAK_NAME = 2DFaceX
 2DFaceX_FILES = Tweak/Tweak.xm Tweak/FaceRecognizer.m Tweak/FaceDatabase.m
 2DFaceX_FRAMEWORKS = UIKit AVFoundation CoreMedia CoreVideo CoreImage Vision
 2DFaceX_PRIVATE_FRAMEWORKS = SpringBoardServices
-2DFaceX_CFLAGS = -fobjc-arc -Wno-deprecated-declarations
+2DFaceX_CFLAGS = -fobjc-arc -Wno-deprecated-declarations -I$(SRCROOT)/Include
 2DFaceX_LDFLAGS = -lobjc
 2DFaceX_ARCHS = arm64
 
